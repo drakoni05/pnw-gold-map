@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNW Gold Prospectivity Map</title>
+    <link rel="stylesheet" href="lib/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <div id="sidebar">
+        <h1>Gold Prospectivity</h1>
+        <p class="subtitle">Pacific Northwest (ID, OR, WA)</p>
+
+        <div class="section">
+            <h2>Heatmap Layers</h2>
+            <label class="layer-toggle">
+                <input type="checkbox" id="toggle-lode" checked />
+                <span class="swatch lode"></span> Lode Gold
+            </label>
+            <label class="layer-toggle">
+                <input type="checkbox" id="toggle-placer" />
+                <span class="swatch placer"></span> Placer Gold
+            </label>
+        </div>
+
+        <div class="section">
+            <h2>Point Layers</h2>
+            <label class="layer-toggle">
+                <input type="checkbox" id="toggle-lode-pts" />
+                <span class="swatch lode-pts"></span> Lode Indicators
+            </label>
+            <label class="layer-toggle">
+                <input type="checkbox" id="toggle-placer-pts" />
+                <span class="swatch placer-pts"></span> Placer Indicators
+            </label>
+            <label class="layer-toggle">
+                <input type="checkbox" id="toggle-soil-au" />
+                <span class="swatch soil-au"></span> Soil Gold (Au)
+            </label>
+            <label class="layer-toggle">
+                <input type="checkbox" id="toggle-sed-au" />
+                <span class="swatch sed-au"></span> Sediment Gold (Au)
+            </label>
+        </div>
+
+        <div class="section">
+            <h2>Basemap</h2>
+            <label class="layer-toggle">
+                <input type="radio" name="basemap" value="osm" checked /> OpenStreetMap
+            </label>
+            <label class="layer-toggle">
+                <input type="radio" name="basemap" value="topo" /> USGS Topo
+            </label>
+            <label class="layer-toggle">
+                <input type="radio" name="basemap" value="satellite" /> Satellite
+            </label>
+        </div>
+
+        <div class="section">
+            <h2>Legend</h2>
+            <div id="legend"></div>
+        </div>
+
+        <div class="section">
+            <h2>Info</h2>
+            <div id="info-panel">
+                <p>Click a point for details.</p>
+            </div>
+        </div>
+
+        <div class="section credits">
+            <p>Data: USGS MRDS, USMIN, NGDB, SGMC; BLM MLRS</p>
+            <p>Methodology: KDE + IDW + Geology Masking</p>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="lib/leaflet/dist/leaflet.js"></script>
+    <script src="lib/leaflet-heat/leaflet-heat.js"></script>
+    <script src="js/layers.js"></script>
+    <script src="js/heatmap.js"></script>
+    <script src="js/legend.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
