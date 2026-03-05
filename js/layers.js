@@ -1,7 +1,7 @@
 /**
- * Layer definitions for the Gold Prospectivity Map.
- * Defines basemaps, heatmap tile layers, and GeoJSON point layers.
- * On static hosting (GitHub Pages), errorTileUrl points to blank.png for missing tiles.
+ * Layer definitions for the Mineral Prospectivity Map.
+ * Dynamically creates tile layers from MineralConfig.
+ * Missing tiles are served as transparent PNGs by the server (no 404s).
  */
 
 const LayerConfig = {
@@ -21,71 +21,23 @@ const LayerConfig = {
         }),
     },
 
-    // Heatmap tile layers (pre-rendered from GeoTIFFs)
-    // Tiles generated for zoom 5-10; server returns transparent PNG for missing tiles
-    heatmapTiles: {
-        lode: L.tileLayer('data/tiles/lode/{z}/{x}/{y}.png', {
-            opacity: 0.65,
-            maxNativeZoom: 10,
-            maxZoom: 16,
-            minZoom: 5,
-            tms: false,
-            attribution: 'Lode Gold Heatmap',
-            errorTileUrl: 'data/tiles/blank.png',
-        }),
-        placer: L.tileLayer('data/tiles/placer/{z}/{x}/{y}.png', {
-            opacity: 0.65,
-            maxNativeZoom: 10,
-            maxZoom: 16,
-            minZoom: 5,
-            tms: false,
-            attribution: 'Placer Gold Heatmap',
-            errorTileUrl: 'data/tiles/blank.png',
-        }),
-    },
+    // Build heatmap tile layers dynamically from MineralConfig
+    heatmapTiles: {},
 
-    // Point layer styles
-    pointStyles: {
-        lode: {
-            radius: 4,
-            fillColor: '#ff6347',
-            color: '#cc3300',
-            weight: 1,
-            opacity: 0.8,
-            fillOpacity: 0.6,
-        },
-        placer: {
-            radius: 4,
-            fillColor: '#4169e1',
-            color: '#1a3cb0',
-            weight: 1,
-            opacity: 0.8,
-            fillOpacity: 0.6,
-        },
-        soil_au: {
-            radius: 3,
-            fillColor: '#ffd700',
-            color: '#b8860b',
-            weight: 1,
-            opacity: 0.7,
-            fillOpacity: 0.5,
-        },
-        sed_au: {
-            radius: 3,
-            fillColor: '#32cd32',
-            color: '#228b22',
-            weight: 1,
-            opacity: 0.7,
-            fillOpacity: 0.5,
-        },
-    },
-
-    // GeoJSON data files
-    dataFiles: {
-        lode_points: 'data/lode_points.geojson',
-        placer_points: 'data/placer_points.geojson',
-        soil_gold: 'data/soil_gold.geojson',
-        sediment_gold: 'data/sediment_gold.geojson',
+    init: function () {
+        var minerals = MineralConfig.minerals;
+        for (var key in minerals) {
+            var m = minerals[key];
+            this.heatmapTiles[key] = L.tileLayer(m.tileUrl, {
+                opacity: 0.65,
+                maxNativeZoom: 10,
+                maxZoom: 16,
+                minZoom: 5,
+                tms: false,
+                errorTileUrl: 'data/tiles/blank.png',
+                attribution: m.label + ' Heatmap',
+            });
+        }
     },
 
     // Weight-based size scaling for point layers
