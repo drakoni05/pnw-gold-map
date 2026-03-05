@@ -25,6 +25,49 @@
     var pointLayers = {};
     var activeMineral = null;
 
+    // ---- Load point layer helper ----
+    function loadPointLayer(k, cfg, onDone) {
+        if (pointLayers[k] && map.hasLayer(pointLayers[k])) {
+            if (onDone) onDone();
+            return;
+        }
+        if (pointLayers[k]) {
+            pointLayers[k].addTo(map);
+            if (onDone) onDone();
+            return;
+        }
+        fetch(cfg.pointsUrl)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var layer = L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        var radius = LayerConfig.weightToRadius(
+                            feature.properties.weight || 1
+                        );
+                        return L.circleMarker(latlng, {
+                            radius: radius,
+                            fillColor: cfg.pointColor,
+                            color: cfg.pointStroke,
+                            weight: 1,
+                            opacity: 0.8,
+                            fillOpacity: 0.6,
+                        });
+                    },
+                    onEachFeature: function (feature, layer) {
+                        layer.on('click', function () {
+                            showInfo(feature.properties, k);
+                        });
+                    },
+                });
+                pointLayers[k] = layer;
+                layer.addTo(map);
+                if (onDone) onDone();
+            })
+            .catch(function (e) {
+                console.warn('Could not load ' + cfg.pointsUrl + ': ' + e.message);
+            });
+    }
+
     // ---- Build sidebar dynamically ----
     var container = document.getElementById('mineral-layers');
     var groups = MineralConfig.groupOrder;
@@ -56,6 +99,7 @@
 
         minerals.forEach(function (key) {
             var m = MineralConfig.minerals[key];
+            var isPointOnly = m.pointOnly === true;
 
             var row = document.createElement('label');
             row.className = 'layer-toggle';
@@ -73,86 +117,78 @@
             labelSpan.className = 'layer-label';
             labelSpan.textContent = m.label;
 
-            var ptsBtn = document.createElement('span');
-            ptsBtn.className = 'pts-toggle';
-            ptsBtn.title = 'Toggle indicator points';
-            ptsBtn.dataset.mineral = key;
-            ptsBtn.innerHTML = '&#9679;';
-            ptsBtn.style.color = m.pointColor;
-
             row.appendChild(cb);
             row.appendChild(swatch);
             row.appendChild(labelSpan);
-            row.appendChild(ptsBtn);
+
+            // Only add the separate points toggle button for minerals with heatmaps
+            if (!isPointOnly) {
+                var ptsBtn = document.createElement('span');
+                ptsBtn.className = 'pts-toggle';
+                ptsBtn.title = 'Toggle indicator points';
+                ptsBtn.dataset.mineral = key;
+                ptsBtn.innerHTML = '&#9679;';
+                ptsBtn.style.color = m.pointColor;
+                row.appendChild(ptsBtn);
+            }
+
             body.appendChild(row);
 
-            // Heatmap tile toggle
-            cb.addEventListener('change', function () {
-                var tileLayer = LayerConfig.heatmapTiles[key];
-                if (this.checked) {
-                    tileLayer.addTo(map);
-                    activeTileLayers[key] = tileLayer;
-                    activeMineral = key;
-                    Legend.showMineralLegend(key);
-                } else {
-                    if (activeTileLayers[key]) {
-                        map.removeLayer(activeTileLayers[key]);
-                        delete activeTileLayers[key];
+            if (isPointOnly) {
+                // Point-only layers: checkbox directly toggles point layer
+                cb.addEventListener('change', function () {
+                    if (this.checked) {
+                        loadPointLayer(key, MineralConfig.minerals[key]);
+                    } else {
+                        if (pointLayers[key] && map.hasLayer(pointLayers[key])) {
+                            map.removeLayer(pointLayers[key]);
+                        }
                     }
-                }
-            });
+                });
+            } else {
+                // Heatmap tile toggle
+                cb.addEventListener('change', function () {
+                    var tileLayer = LayerConfig.heatmapTiles[key];
+                    if (this.checked) {
+                        tileLayer.addTo(map);
+                        activeTileLayers[key] = tileLayer;
+                        activeMineral = key;
+                        Legend.showMineralLegend(key);
+                    } else {
+                        if (activeTileLayers[key]) {
+                            map.removeLayer(activeTileLayers[key]);
+                            delete activeTileLayers[key];
+                        }
+                    }
+                });
 
-            // Points toggle
-            ptsBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var k = this.dataset.mineral;
-                var cfg = MineralConfig.minerals[k];
+                // Points toggle button
+                if (ptsBtn) {
+                    ptsBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var k = this.dataset.mineral;
+                        var cfg = MineralConfig.minerals[k];
 
-                if (pointLayers[k] && map.hasLayer(pointLayers[k])) {
-                    map.removeLayer(pointLayers[k]);
-                    this.classList.remove('active');
-                    return;
-                }
+                        if (pointLayers[k] && map.hasLayer(pointLayers[k])) {
+                            map.removeLayer(pointLayers[k]);
+                            this.classList.remove('active');
+                            return;
+                        }
 
-                if (pointLayers[k]) {
-                    pointLayers[k].addTo(map);
-                    this.classList.add('active');
-                    return;
-                }
+                        if (pointLayers[k]) {
+                            pointLayers[k].addTo(map);
+                            this.classList.add('active');
+                            return;
+                        }
 
-                var btn = this;
-                fetch(cfg.pointsUrl)
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        var layer = L.geoJSON(data, {
-                            pointToLayer: function (feature, latlng) {
-                                var radius = LayerConfig.weightToRadius(
-                                    feature.properties.weight || 1
-                                );
-                                return L.circleMarker(latlng, {
-                                    radius: radius,
-                                    fillColor: cfg.pointColor,
-                                    color: cfg.pointStroke,
-                                    weight: 1,
-                                    opacity: 0.8,
-                                    fillOpacity: 0.6,
-                                });
-                            },
-                            onEachFeature: function (feature, layer) {
-                                layer.on('click', function () {
-                                    showInfo(feature.properties, k);
-                                });
-                            },
+                        var btn = this;
+                        loadPointLayer(k, cfg, function () {
+                            btn.classList.add('active');
                         });
-                        pointLayers[k] = layer;
-                        layer.addTo(map);
-                        btn.classList.add('active');
-                    })
-                    .catch(function (e) {
-                        console.warn('Could not load ' + cfg.pointsUrl + ': ' + e.message);
                     });
-            });
+                }
+            }
         });
 
         groupDiv.appendChild(body);

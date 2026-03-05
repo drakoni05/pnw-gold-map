@@ -28,14 +28,15 @@ const LayerConfig = {
         var minerals = MineralConfig.minerals;
         for (var key in minerals) {
             var m = minerals[key];
+            if (!m.tileUrl) continue;  // skip point-only layers
             this.heatmapTiles[key] = L.tileLayer(m.tileUrl, {
                 opacity: 0.65,
                 maxNativeZoom: 10,
                 maxZoom: 16,
                 minZoom: 5,
                 tms: false,
-                errorTileUrl: 'data/tiles/blank.png',
                 attribution: m.label + ' Heatmap',
+                errorTileUrl: 'data/tiles/blank.png',
             });
         }
     },
