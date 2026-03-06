@@ -38,6 +38,41 @@ const MineralConfig = {
             pointsUrl: 'data/sediment_gold.geojson',
             pointOnly: true,
         },
+
+        // ---- BLM Mining Claims ----
+        blm_lode_active: {
+            symbol: 'Au', label: 'Active Lode Claims', group: 'BLM Mining Claims',
+            swatch: '#e74c3c', pointColor: '#e74c3c', pointStroke: '#c0392b',
+            gradient: null,
+            tileUrl: null,
+            pointsUrl: 'data/blm_lode_active.geojson',
+            pointOnly: true,
+        },
+        blm_lode_closed: {
+            symbol: 'Au', label: 'Past Lode Claims', group: 'BLM Mining Claims',
+            swatch: '#95a5a6', pointColor: '#95a5a6', pointStroke: '#7f8c8d',
+            gradient: null,
+            tileUrl: null,
+            pointsUrl: 'data/blm_lode_closed.geojson',
+            pointOnly: true,
+        },
+        blm_placer_active: {
+            symbol: 'Au', label: 'Active Placer Claims', group: 'BLM Mining Claims',
+            swatch: '#3498db', pointColor: '#3498db', pointStroke: '#2980b9',
+            gradient: null,
+            tileUrl: null,
+            pointsUrl: 'data/blm_placer_active.geojson',
+            pointOnly: true,
+        },
+        blm_placer_closed: {
+            symbol: 'Au', label: 'Past Placer Claims', group: 'BLM Mining Claims',
+            swatch: '#bdc3c7', pointColor: '#bdc3c7', pointStroke: '#a0a6a9',
+            gradient: null,
+            tileUrl: null,
+            pointsUrl: 'data/blm_placer_closed.geojson',
+            pointOnly: true,
+        },
+
         silver: {
             symbol: 'Ag', label: 'Silver', group: 'Precious Metals',
             swatch: '#708090', pointColor: '#a0a0b0', pointStroke: '#606080',
@@ -205,6 +240,7 @@ const MineralConfig = {
     groups: {
         'Precious Metals': ['gold_lode', 'gold_placer', 'silver'],
         'Gold Geochemistry': ['gold_soil', 'gold_sediment'],
+        'BLM Mining Claims': ['blm_lode_active', 'blm_lode_closed', 'blm_placer_active', 'blm_placer_closed'],
         'Base Metals': ['copper', 'lead', 'zinc', 'nickel', 'tin'],
         'Battery Metals': ['lithium', 'cobalt', 'manganese', 'vanadium'],
         'Industrial Metals': ['chromium', 'tungsten', 'uranium', 'titanium'],
@@ -212,7 +248,7 @@ const MineralConfig = {
     },
 
     groupOrder: [
-        'Precious Metals', 'Gold Geochemistry', 'Base Metals',
+        'Precious Metals', 'Gold Geochemistry', 'BLM Mining Claims', 'Base Metals',
         'Battery Metals', 'Industrial Metals', 'Strategic Metals',
     ],
 };
