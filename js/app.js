@@ -15,6 +15,7 @@
         zoom: 6,
         minZoom: 4,
         maxZoom: 16,
+        preferCanvas: true,
     });
 
     var activeBasemap = LayerConfig.basemaps.osm;
@@ -24,6 +25,8 @@
     var activeTileLayers = {};
     var pointLayers = {};
     var activeMineral = null;
+    var activeFgbLayers = {};
+    var fgbLoadSeq = {};
 
     // ---- Load point layer helper ----
     function loadPointLayer(k, cfg, onDone) {
@@ -67,6 +70,73 @@
                 console.warn('Could not load ' + cfg.pointsUrl + ': ' + e.message);
             });
     }
+
+    // ---- FlatGeobuf loader: stream full file, cache features, viewport-filter on pan ----
+    var fgbCache = {};       // k -> [{lat, lng, props}, ...]
+    var fgbLoading = {};     // k -> true while loading
+
+    async function loadFgbData(k, cfg) {
+        if (fgbCache[k]) { renderFgbLayer(k, cfg); return; }
+        if (fgbLoading[k]) return;
+        fgbLoading[k] = true;
+        var features = [];
+        try {
+            var response = await fetch(cfg.fgbUrl);
+            var iter = flatgeobuf.deserialize(response.body);
+            for await (var feature of iter) {
+                var c = feature.geometry.coordinates;
+                features.push({ lat: c[1], lng: c[0], props: feature.properties });
+            }
+        } catch (e) {
+            console.warn('FGB load error for ' + k + ': ' + e.message);
+            fgbLoading[k] = false;
+            return;
+        }
+        fgbCache[k] = features;
+        fgbLoading[k] = false;
+        if (activeFgbLayers[k]) renderFgbLayer(k, cfg);
+    }
+
+    function renderFgbLayer(k, cfg) {
+        var features = fgbCache[k];
+        if (!features) return;
+        var bounds = map.getBounds().pad(0.1);
+        var s = bounds.getSouth(), n = bounds.getNorth();
+        var w = bounds.getWest(), e = bounds.getEast();
+        var newLayer = L.layerGroup();
+        for (var i = 0; i < features.length; i++) {
+            var f = features[i];
+            if (f.lat < s || f.lat > n || f.lng < w || f.lng > e) continue;
+            var marker = L.circleMarker([f.lat, f.lng], {
+                radius: 3,
+                fillColor: cfg.pointColor,
+                color: cfg.pointStroke,
+                weight: 1,
+                opacity: 0.8,
+                fillOpacity: 0.6,
+            });
+            (function (props) {
+                marker.on('click', function () { showInfo(props, k); });
+            })(f.props);
+            newLayer.addLayer(marker);
+        }
+        newLayer.addTo(map);
+        var oldLayer = pointLayers[k];
+        pointLayers[k] = newLayer;
+        if (oldLayer && map.hasLayer(oldLayer)) map.removeLayer(oldLayer);
+    }
+
+    var fgbDebounce = {};
+    map.on('moveend', function () {
+        for (var k in activeFgbLayers) {
+            (function (key) {
+                clearTimeout(fgbDebounce[key]);
+                fgbDebounce[key] = setTimeout(function () {
+                    renderFgbLayer(key, MineralConfig.minerals[key]);
+                }, 200);
+            })(k);
+        }
+    });
 
     // ---- Build sidebar dynamically ----
     var container = document.getElementById('mineral-layers');
@@ -137,9 +207,16 @@
             if (isPointOnly) {
                 // Point-only layers: checkbox directly toggles point layer
                 cb.addEventListener('change', function () {
+                    var cfg = MineralConfig.minerals[key];
                     if (this.checked) {
-                        loadPointLayer(key, MineralConfig.minerals[key]);
+                        if (cfg.fgbUrl) {
+                            activeFgbLayers[key] = true;
+                            loadFgbData(key, cfg);
+                        } else {
+                            loadPointLayer(key, cfg);
+                        }
                     } else {
+                        delete activeFgbLayers[key];
                         if (pointLayers[key] && map.hasLayer(pointLayers[key])) {
                             map.removeLayer(pointLayers[key]);
                         }

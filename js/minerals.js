@@ -45,7 +45,8 @@ const MineralConfig = {
             swatch: '#e74c3c', pointColor: '#e74c3c', pointStroke: '#c0392b',
             gradient: null,
             tileUrl: null,
-            pointsUrl: 'data/blm_lode_active.geojson',
+            pointsUrl: null,
+            fgbUrl: 'data/blm_lode_active.fgb',
             pointOnly: true,
         },
         blm_lode_closed: {
@@ -53,7 +54,8 @@ const MineralConfig = {
             swatch: '#95a5a6', pointColor: '#95a5a6', pointStroke: '#7f8c8d',
             gradient: null,
             tileUrl: null,
-            pointsUrl: 'data/blm_lode_closed.geojson',
+            pointsUrl: null,
+            fgbUrl: 'data/blm_lode_closed.fgb',
             pointOnly: true,
         },
         blm_placer_active: {
@@ -61,7 +63,8 @@ const MineralConfig = {
             swatch: '#3498db', pointColor: '#3498db', pointStroke: '#2980b9',
             gradient: null,
             tileUrl: null,
-            pointsUrl: 'data/blm_placer_active.geojson',
+            pointsUrl: null,
+            fgbUrl: 'data/blm_placer_active.fgb',
             pointOnly: true,
         },
         blm_placer_closed: {
@@ -69,7 +72,8 @@ const MineralConfig = {
             swatch: '#bdc3c7', pointColor: '#bdc3c7', pointStroke: '#a0a6a9',
             gradient: null,
             tileUrl: null,
-            pointsUrl: 'data/blm_placer_closed.geojson',
+            pointsUrl: null,
+            fgbUrl: 'data/blm_placer_closed.fgb',
             pointOnly: true,
         },
 
